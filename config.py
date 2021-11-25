@@ -9,10 +9,10 @@ DIR_RES = 'outputMusicGeneration/'
 
 YT_SEARCH_ATTEMPTS_MAX = 3
 YDL_OPTS = {
-    'outtmpl': TEMP_DIR_MP3 + '%(id)s.%(ext)s',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
         'preferredquality': '190',
     }],
 }
+
