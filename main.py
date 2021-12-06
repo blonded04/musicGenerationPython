@@ -11,7 +11,8 @@ from os import walk, makedirs, system, path
 
 def download_song(url):
     generation_opts = YDL_OPTS
-    generation_opts['outtmpl'] = path.abspath(path.abspath(TEMP_DIR_MP3) + '/' + '%(id)s.%(ext)s')
+    generation_opts['outtmpl'] = path.abspath(
+        path.join(path.abspath(TEMP_DIR_MP3), '%(id)s.%(ext)s'))
     with youtube_dl.YoutubeDL(generation_opts) as ydl:
         ydl.download([url])
 
@@ -22,7 +23,8 @@ def find_songs_yt(songs):
         for attempt in range(1, YT_SEARCH_ATTEMPTS_MAX + 1):
             try:
                 results_list = YoutubeSearch(track, max_results=1).to_dict()
-                url = "https://www.youtube.com{}".format(results_list[0]['url_suffix'])
+                url = "https://www.youtube.com{}".format(
+                    results_list[0]['url_suffix'])
                 break
             except IndexError:
                 if attempt != YT_SEARCH_ATTEMPTS_MAX:
@@ -63,13 +65,14 @@ def process_to_wav():
     if len(fnames) == 0:
         return
     fnames = fnames[0]
-    if not path.exists(path.abspath(fnames[0] + '/../' + TEMP_DIR_WAV)):
-        makedirs(path.abspath(fnames[0] + '/../' + TEMP_DIR_WAV))
+    if not path.exists(path.abspath(path.join(fnames[0], '../', TEMP_DIR_WAV))):
+        makedirs(path.abspath(path.join(fnames[0], '../', TEMP_DIR_WAV)))
     for fname_cur in fnames[2]:
         if fname_cur.split('.')[-1] == 'part':
             continue
-        fname_old = path.abspath(fnames[0] + '/' + fname_cur)
-        fname_new = path.abspath(fnames[0] + '/../' + TEMP_DIR_WAV + '/' + fname_cur.split('.')[0] + '.wav')
+        fname_old = path.abspath(path.join(fnames[0], fname_cur))
+        fname_new = path.abspath(
+            path.join(fnames[0], '../', TEMP_DIR_WAV, fname_cur.split('.')[0] + '.wav'))
         print('Converting \".mp3\" to \".wav\"...')
         print('[audiofile] \'' + fname_old + '\' -> \'' + fname_new + '\'')
         signal, sampling_rate = audiofile.read(fname_old)
@@ -82,11 +85,12 @@ def resize_wavs():
     if len(fnames) == 0:
         return
     fnames = fnames[0]
-    if not path.exists(path.abspath(fnames[0] + '/../' + TEMP_DIR_MOD)):
-        makedirs(path.abspath(fnames[0] + '/../' + TEMP_DIR_MOD))
+    if not path.exists(path.abspath(path.join(fnames[0], '../', TEMP_DIR_MOD))):
+        makedirs(path.abspath(path.join(fnames[0], '../', TEMP_DIR_MOD)))
     for fname_cur in fnames[2]:
-        fname_old = path.abspath(fnames[0] + '/' + fname_cur)
-        fname_new = path.abspath(fnames[0] + '/../' + TEMP_DIR_MOD + '/' + fname_cur.split('.')[0] + '.wav')
+        fname_old = path.abspath(path.join(fnames[0], fname_cur))
+        fname_new = path.abspath(
+            path.join(fnames[0], '../', TEMP_DIR_MOD, fname_cur.split('.')[0] + '.wav'))
         with wave.open(fname_old) as mywav:
             duration_seconds = mywav.getnframes() / mywav.getframerate()
         start = (duration_seconds / 2 - 16)  # Seconds
@@ -115,15 +119,17 @@ def process_to_midi():
     if len(fnames) == 0:
         return
     fnames = fnames[0]
-    if not path.exists(path.abspath(fnames[0] + '/../' + INP_DIR_MID)):
-        makedirs(path.abspath(fnames[0] + '/../' + INP_DIR_MID))
+    if not path.exists(path.abspath(path.join(fnames[0], '../', INP_DIR_MID))):
+        makedirs(path.abspath(path.join(fnames[0], '../', INP_DIR_MID)))
     for fname_cur in fnames[2]:
-        fname_old = path.abspath(fnames[0] + '/' + fname_cur)
-        fname_new = path.abspath(fnames[0] + '/../' + INP_DIR_MID + '/' + fname_cur.split('.')[0] + '.mid')
+        fname_old = path.abspath(path.join(fnames[0], fname_cur))
+        fname_new = path.abspath(
+            path.join(fnames[0], '../', INP_DIR_MID, fname_cur.split('.')[0] + '.mid'))
         print('Converting \".wav\" to \".mid\"...')
         print('[waon] \'' + fname_old + '\' -> \'' + fname_new + '\'')
         print('[waon] ./waon -i ' + fname_old + ' -o ' + fname_new)
-        system('./waon -i ' + fname_old + ' -o ' + fname_new)  # Not safe at all
+        system('./waon -i ' + fname_old + ' -o ' +
+               fname_new)  # Not safe at all
 
 
 def midis_continue():
@@ -133,7 +139,8 @@ def midis_continue():
     from note_seq.protobuf import generator_pb2
     from note_seq.protobuf import music_pb2
     # Prepare model
-    bundle = sequence_generator_bundle.read_bundle_file(path.abspath('content/basic_rnn.mag'))
+    bundle = sequence_generator_bundle.read_bundle_file(
+        path.abspath('content/basic_rnn.mag'))
     generator_map = melody_rnn_sequence_generator.get_generator_map()
     melody_rnn = generator_map['basic_rnn'](checkpoint=None, bundle=bundle)
     melody_rnn.initialize()
@@ -141,12 +148,14 @@ def midis_continue():
     fnames = [tpl for tpl in walk(path.abspath(INP_DIR_MID))][0]
     if len(fnames) == 0:
         return
-    if not path.exists(path.abspath(fnames[0] + '/../' + DIR_RES)):
-        makedirs(path.abspath(fnames[0] + '/../' + DIR_RES))
+    if not path.exists(path.abspath(path.join(fnames[0], '../', DIR_RES))):
+        makedirs(path.abspath(path.join(fnames[0], '../', DIR_RES)))
     for fname_cur in fnames[2]:
-        fname_old = path.abspath(fnames[0] + '/' + fname_cur)
-        fname_new = path.abspath(fnames[0] + '/../' + DIR_RES + '/' + fname_cur.split('.')[0] + '.mid')
-        input_sequence = convert_midi(path.abspath(""), path.abspath(INP_DIR_MID), fname_old)
+        fname_old = path.abspath(path.join(fnames[0], fname_cur))
+        fname_new = path.abspath(
+            path.join(fnames[0], '../', DIR_RES, fname_cur.split('.')[0] + '.mid'))
+        input_sequence = convert_midi(path.abspath(
+            ""), path.abspath(INP_DIR_MID), fname_old)
         # Model options
         num_steps = 256  # Sequence length 8 * seconds
         temperature = 1.0  # Randomization degree
@@ -172,7 +181,7 @@ if __name__ == "__main__":
     import note_seq
     import tensorflow
     tensorflow.get_logger().setLevel('ERROR')  # No 'no cuda detected' warnings
-    
+
     queries = argv[1:]
     melodies = []
     find_songs_sp(queries, melodies)
@@ -182,10 +191,3 @@ if __name__ == "__main__":
     process_to_midi()
     midis_continue()
     print('🎉 Done! 💯💯💯 🚫🧢')
-    import shutil
-
-    # if path.exists(path.abspath(TEMP_DIR_MP3)):
-    #     shutil.rmtree(path.abspath(TEMP_DIR_MP3))  # Not safe at all
-    # if path.exists(path.abspath(TEMP_DIR_WAV)):
-    #     shutil.rmtree(path.abspath(TEMP_DIR_WAV))  # Not safe at all
-
